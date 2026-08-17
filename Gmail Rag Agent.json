@@ -1,0 +1,1226 @@
+{
+  "name": "Gmail Rag Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "maxResults": 1,
+        "filters": {
+          "q": "subject: doggyfood"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -272,
+        -16
+      ],
+      "id": "67787892-dd94-4dec-8253-ae69f829976e",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1JtFkrUqTjTrGxOT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        -16
+      ],
+      "id": "d6cc6317-d93f-4d03-8234-cc7bd0c3b498",
+      "name": "Wait",
+      "webhookId": "bc3f859d-93e3-4a4e-b5d7-082cd57f535b"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're an intelligent E-Com assistant of a brand called DoggyFood. DOggy Food is a dog-food and pet-care brand. It offers dog food, treats, chews, toys, and feeding accessories. Treat customers with respect and be direct. \nCreate a clean response and easy format to read for customers.\n\nClient enquire:  {{ $json.guardrailsInput }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "=You are a helpful assistant for an E-Com brand named DOggyFood. Your role is to assist with customer support for clients. Retrieve information using your tools to answer the questions.\n\nAnswer emails briefly and concise about their enquires. \nEnquire by the client: {{ $json.guardrailsInput }}\n\nAlways be polite and gentle. If you don't have the information. Respond with a: I don’t have that knowledge, so I’m forwarding your request to a human for better customer support.\n\n# Tools \nChroma: Database "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        -32
+      ],
+      "id": "fae1f749-9760-4b0b-bd23-a252a6da1f47",
+      "name": "AI Agent",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "gmailRag",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        816,
+        448
+      ],
+      "id": "bb61f4d5-5331-480b-afa8-80ba421e4161",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.text }}",
+        "guardrails": {
+          "keywords": "database, api, ",
+          "jailbreak": {
+            "value": {
+              "threshold": 0.7
+            }
+          },
+          "pii": {
+            "value": {
+              "type": "all"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        256,
+        -16
+      ],
+      "id": "59d4b194-d8a2-44f0-adae-72757d625d9a",
+      "name": "Guardrails"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        -64
+      ],
+      "id": "3f3796fc-615d-4ea4-b102-c4a83c5c44ad",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        336,
+        800
+      ],
+      "id": "cda89119-7175-4cfd-9c67-79bb6d202d97",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "chromaCollection": {
+          "__rl": true,
+          "value": "doggyfood",
+          "mode": "list",
+          "cachedResultName": "doggyfood"
+        },
+        "embeddingBatchSize": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreChromaDB",
+      "typeVersion": 1.3,
+      "position": [
+        1168,
+        800
+      ],
+      "id": "58b32ded-645f-499b-a9e1-9d447b729c6d",
+      "name": "Chroma Vector Store1",
+      "credentials": {
+        "chromaSelfHostedApi": {
+          "id": "KZbyxBuvvE5ggKX1",
+          "name": "ChromaDB Self-Hosted account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        960
+      ],
+      "id": "8b18408f-5377-4dce-ac7c-36f171282c9f",
+      "name": "Embeddings HuggingFace Inference1",
+      "credentials": {
+        "huggingFaceApi": {
+          "id": "kwFoPbAhblPN6EKm",
+          "name": "Hugging Face account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1312,
+        1008
+      ],
+      "id": "6f31a679-d9c0-4f4b-a6ba-4466e6ae0f65",
+      "name": "Default Data Loader",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.name }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        992,
+        800
+      ],
+      "id": "f5a70f2a-72b8-419c-a6f0-dd669af716de",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "KrVpkxzJDalU9x2p",
+          "name": "Google Drive account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "limit": 5,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        544,
+        800
+      ],
+      "id": "17a0caff-bee6-43e2-925f-3e40609b8a3a",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "KrVpkxzJDalU9x2p",
+          "name": "Google Drive account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4ed86ea7-e7c5-42fc-ac79-65880f69c475",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": ".md",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        752,
+        800
+      ],
+      "id": "03bd6dc8-78e2-457b-8751-f045f3be9248",
+      "name": "Filter",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        -416
+      ],
+      "id": "ab0bcd48-2202-477a-86c7-1a6d810f204f",
+      "name": "No Operation, do nothing1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Gmail Trigger').item.json.headers.to }}",
+        "subject": "Re: We couldn't process your latest email",
+        "emailType": "text",
+        "message": "Hi, from DoggyFood. We believe your last email could contain personal information or malicious instructions.\n\nPlease check your information and send us back again an email. \n\nDoggyFood",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        112
+      ],
+      "id": "36287f9e-f8e0-40d4-85e3-41f3dd8dbdb5",
+      "name": "Send a message3",
+      "webhookId": "699de1f6-a948-473d-9c42-f1237fb59aca",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1JtFkrUqTjTrGxOT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        448,
+        448
+      ],
+      "id": "f76791b7-e9c4-4aae-9af6-0ed17c3243d4",
+      "name": "LLM",
+      "credentials": {
+        "groqApi": {
+          "id": "vbtQOWjZygaKElPo",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "ministral-14b-2512",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        608,
+        448
+      ],
+      "id": "49275f77-246e-4a08-8096-61d4f9117474",
+      "name": "Fallback LLM",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "dZiGagcLJVuUdlKy",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "sentence-transformers/all-MiniLM-L6-v2",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsHuggingFaceInference",
+      "typeVersion": 1,
+      "position": [
+        976,
+        448
+      ],
+      "id": "e6197690-bbed-4b75-ae84-5bc8567912d4",
+      "name": "Embeddings",
+      "credentials": {
+        "huggingFaceApi": {
+          "id": "kwFoPbAhblPN6EKm",
+          "name": "Hugging Face account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Retrieve data from this database to answer customer enquires. ",
+        "chromaCollection": {
+          "__rl": true,
+          "value": "doggyfood",
+          "mode": "list",
+          "cachedResultName": "doggyfood"
+        },
+        "topK": 5,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreChromaDB",
+      "typeVersion": 1.3,
+      "position": [
+        1136,
+        432
+      ],
+      "id": "57eaeb19-2fb3-436b-a0d3-b729fec455e0",
+      "name": "Vector Store",
+      "credentials": {
+        "chromaSelfHostedApi": {
+          "id": "KZbyxBuvvE5ggKX1",
+          "name": "ChromaDB Self-Hosted account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Add a new field called 'myNewField' to the JSON of the item\n$input.item.json.myNewField = 1;\n\nreturn $input.item;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -16
+      ],
+      "id": "a227c817-4a67-42e6-b7f6-173cdd907cf9",
+      "name": "Process Item By Item"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI",
+          "mode": "list",
+          "cachedResultName": "Gmail Rag Assistance - GoldenDataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Question": "={{ $('Gmail Trigger').item.json.text }}",
+            "Answer": "={{ $json.output }}",
+            "ID": "={{ $('Gmail Trigger').item.json.id }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Answer",
+              "displayName": "Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expected Answer",
+              "displayName": "Expected Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        992,
+        -416
+      ],
+      "id": "439f0434-7f19-4eb3-b410-26caa1de3936",
+      "name": "Golden Dataset",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DiQ48KDsbY9mwKTn",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "33e61d3e-888a-47c0-8bf8-c0806f10a0b3",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "=scaling to a human",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1056,
+        -48
+      ],
+      "id": "2905438b-bb7f-4923-b0c0-d7b4b9d92233",
+      "name": "IF"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Gmail Trigger').item.json.headers.from }}",
+        "subject": "=Re: {{ $('Gmail Trigger').item.json.headers.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        96
+      ],
+      "id": "3ddaa2f4-bf74-4f84-9aca-b7fd1bf9af51",
+      "name": "Message to User",
+      "webhookId": "7e99f186-2cfe-473c-aa6b-ede361e64c58",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1JtFkrUqTjTrGxOT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "=Re: {{ $('Gmail Trigger').item.json.headers.from }}",
+        "subject": "=Re:  {{ $('Gmail Trigger').item.json.headers.to }}",
+        "emailType": "text",
+        "message": "=Scaling this to a human. You are getting contacted in the next 24 hours. ",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        -64
+      ],
+      "id": "631be028-01aa-4e76-8c5e-bb0e0a0673e6",
+      "name": "Message to User1",
+      "webhookId": "7e99f186-2cfe-473c-aa6b-ede361e64c58",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1JtFkrUqTjTrGxOT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "doggyfood@gmail.com",
+        "subject": "Re: Need Assistance",
+        "emailType": "text",
+        "message": "Client: {{ $('Gmail Trigger').item.json.headers.from }}\n\n\nNeeds assistance with: ",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1552,
+        -64
+      ],
+      "id": "78a5a089-9d6e-47b6-8b67-2b28e6187791",
+      "name": "Scale To Human",
+      "webhookId": "8e7dd96a-083e-4f1b-9645-79abf35134ff",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1JtFkrUqTjTrGxOT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI",
+          "mode": "list",
+          "cachedResultName": "Gmail Rag Assistance - GoldenDataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $('Get row(s) in sheet').item.json.ID }}",
+            "Score": "={{ $json.output }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Question",
+              "displayName": "Question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Answer",
+              "displayName": "Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Expected Answer",
+              "displayName": "Expected Answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1792,
+        -416
+      ],
+      "id": "ea7e4edb-b4e5-47ff-8050-37ae049c5ba7",
+      "name": "Golden Dataset1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DiQ48KDsbY9mwKTn",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI",
+          "mode": "list",
+          "cachedResultName": "Gmail Rag Assistance - GoldenDataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Oag6gbLVzSQL0-KverFSupH4qW2ixQIKj8DmZUQDuJI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "ID",
+              "lookupValue": "={{ $json.ID }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1200,
+        -416
+      ],
+      "id": "295ec765-c6c3-49a5-80d7-bfc36673279f",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "DiQ48KDsbY9mwKTn",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "aijudge"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        1488,
+        -288
+      ],
+      "id": "cbda2ef9-0ecd-41e1-b85e-9ab16f65abf8",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        -272
+      ],
+      "id": "da5dd51c-0b1d-4172-b5e8-1d1d2b07b311",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "vbtQOWjZygaKElPo",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are an AI as a Judge. Qualify the response and compare it to how the response should be, your output needs to be a number between \"1-5\" depending on how close it is.",
+        "options": {
+          "systemMessage": "=You are an assistance that qualifies user inputs and the response of a previous LLM. Give an score of how accurate for a Ecomm customer support agent this was.\n\nGive an score from 1 to 5.\n\nAnswer of the LLM: {{ $json.Answer }}\nExpected Answer: {{ $json['Expected Answer'] }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1392,
+        -416
+      ],
+      "id": "cd444a5e-606f-4dc4-8e26-527547814054",
+      "name": "AI as Judge"
+    },
+    {
+      "parameters": {
+        "errorMessage": "AI Agent failed."
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        96
+      ],
+      "id": "a9c644c5-f23c-4f02-a73b-dacd79a85674",
+      "name": "Stop and Error"
+    }
+  ],
+  "pinData": {
+    "Gmail Trigger": [
+      {
+        "json": {
+          "id": "19ff70432a87b49b",
+          "threadId": "19ff702db188afff",
+          "labelIds": [
+            "UNREAD",
+            "IMPORTANT",
+            "SENT",
+            "INBOX"
+          ],
+          "sizeEstimate": 806,
+          "headers": {
+            "mime-version": "MIME-Version: 1.0",
+            "date": "Date: Wed, 12 Aug 2026 11:27:53 -0600",
+            "message-id": "Message-ID: <CAG1t3pGditm2SEoMYd+Bxp1cd3qYhnmpyZYJtwtVPKrKdwYbRQ@mail.gmail.com>",
+            "subject": "Subject: DOggy Food",
+            "from": "From: Rodrigo Zayas <rodezayas@gmail.com>",
+            "to": "To: Rodrigo Zayas <rodezayas@gmail.com>",
+            "content-type": "Content-Type: multipart/alternative; boundary=\"0000000000006a44760658dce858\""
+          },
+          "html": "<div dir=\"ltr\">Hi. I wanna know what is the formula of Fresh Chicken Stew. And also I want to know if you have the toy Chew and fetch toy. Thank you</div>\n",
+          "text": "Hi. I wanna know what is the formula of Fresh Chicken Stew. And also I want\nto know if you have the toy Chew and fetch toy. Thank you\n",
+          "textAsHtml": "<p>Hi. I wanna know what is the formula of Fresh Chicken Stew. And also I want<br/>to know if you have the toy Chew and fetch toy. Thank you</p>",
+          "subject": "DOggy Food",
+          "date": "2026-08-12T17:27:53.000Z",
+          "to": {
+            "value": [
+              {
+                "address": "rodezayas@gmail.com",
+                "name": "Rodrigo Zayas"
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Rodrigo Zayas</span> &lt;<a href=\"mailto:rodezayas@gmail.com\" class=\"mp_address_email\">rodezayas@gmail.com</a>&gt;</span>",
+            "text": "\"Rodrigo Zayas\" <rodezayas@gmail.com>"
+          },
+          "from": {
+            "value": [
+              {
+                "address": "rodezayas@gmail.com",
+                "name": "Rodrigo Zayas"
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">Rodrigo Zayas</span> &lt;<a href=\"mailto:rodezayas@gmail.com\" class=\"mp_address_email\">rodezayas@gmail.com</a>&gt;</span>",
+            "text": "\"Rodrigo Zayas\" <rodezayas@gmail.com>"
+          },
+          "messageId": "<CAG1t3pGditm2SEoMYd+Bxp1cd3qYhnmpyZYJtwtVPKrKdwYbRQ@mail.gmail.com>"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Item By Item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Golden Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardrails": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings HuggingFace Inference1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Chroma Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Chroma Vector Store1",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Chroma Vector Store1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing1": {
+      "main": [
+        []
+      ]
+    },
+    "LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Guardrails",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fallback LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Item By Item": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Golden Dataset": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "Message to User1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message to User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message to User": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message to User1": {
+      "main": [
+        [
+          {
+            "node": "Scale To Human",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scale To Human": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Golden Dataset1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "AI as Judge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI as Judge",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI as Judge",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI as Judge": {
+      "main": [
+        [
+          {
+            "node": "Golden Dataset1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "eb05ed77-7bfb-4da5-bb6b-10468f128d3c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6cc0f89eb731e371992502337a619c69978006102757e9cd996d6e12d5a2799d"
+  },
+  "nodeGroups": [],
+  "id": "p5o8pXh7XCp7ZbfN",
+  "tags": []
+}
