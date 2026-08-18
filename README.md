@@ -1,4 +1,4 @@
-# DOggy Food --- Gmail RAG Customer Support Agent
+# Gmail RAG Customer Support Agent
 
 ## Overview
 
