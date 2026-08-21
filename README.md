@@ -443,8 +443,6 @@ instead of relying only on manual inspection.
 ## Notes
 
 -   The active customer-support path is Gmail-based.
--   The Gmail trigger currently filters messages with
-    `subject: doggyfood`.
 -   ChromaDB collection: `doggyfood`.
 -   Retrieval: `topK = 5`.
 -   Embedding batch size: `50`.
